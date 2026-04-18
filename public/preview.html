@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF Preview</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/quotation.html">Create Quotation</a>
+      <a href="/preview.html">PDF Preview</a>
+    </nav>
+
+    <section class="card">
+      <h2>Generate PDF</h2>
+      <label for="documentId">Document ID</label>
+      <input id="documentId" placeholder="Enter temporary document ID" />
+      <div class="actions">
+        <button id="generateBtn" type="button">Generate and Download PDF</button>
+      </div>
+      <p id="result" class="small"></p>
+      <a id="downloadLink" target="_blank" rel="noopener"></a>
+    </section>
+  </div>
+
+  <script src="/js/preview.js"></script>
+</body>
+</html>
