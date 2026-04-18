@@ -2,6 +2,8 @@ const fs = require('fs/promises');
 const path = require('path');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 
+const downloadsDir = path.join(__dirname, '..', 'public', 'downloads');
+
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
@@ -47,13 +49,31 @@ async function createDocumentPdf({ id, clientName, items, totalAmount, type, cre
 
   const bytes = await pdf.save();
   const fileName = `${type}-${id}-${Date.now()}.pdf`;
-  const filePath = path.join(__dirname, '..', 'public', 'downloads', fileName);
+  const filePath = path.join(downloadsDir, fileName);
 
   await fs.writeFile(filePath, bytes);
-
   return `/downloads/${fileName}`;
 }
 
+async function cleanupOldPdfFiles(retentionHours) {
+  const cutoff = Date.now() - (retentionHours * 60 * 60 * 1000);
+  const files = await fs.readdir(downloadsDir);
+  let removed = 0;
+
+  for (const file of files) {
+    if (!file.endsWith('.pdf')) continue;
+    const fullPath = path.join(downloadsDir, file);
+    const stat = await fs.stat(fullPath);
+    if (stat.mtimeMs < cutoff) {
+      await fs.unlink(fullPath);
+      removed += 1;
+    }
+  }
+
+  return removed;
+}
+
 module.exports = {
-  createDocumentPdf
+  createDocumentPdf,
+  cleanupOldPdfFiles
 };

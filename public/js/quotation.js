@@ -7,18 +7,43 @@ const formatCurrency = (value) => new Intl.NumberFormat('en-US', {
   currency: 'USD'
 }).format(value || 0);
 
+function createInput(className, type = 'text', min = null, step = null, value = '') {
+  const input = document.createElement('input');
+  input.className = className;
+  input.type = type;
+  input.value = value;
+  if (min !== null) input.min = min;
+  if (step !== null) input.step = step;
+  return input;
+}
+
 function addItemRow(item = { name: '', qty: 1, price: 0 }) {
   const row = document.createElement('tr');
-  row.innerHTML = `
-    <td><input class="item-name" value="${item.name}" /></td>
-    <td><input class="item-qty" type="number" min="1" value="${item.qty}" /></td>
-    <td><input class="item-price" type="number" min="0" step="0.01" value="${item.price}" /></td>
-    <td class="line-total">$0.00</td>
-    <td><button class="secondary remove-item" type="button">Remove</button></td>
-  `;
+
+  const nameCell = document.createElement('td');
+  nameCell.appendChild(createInput('item-name', 'text', null, null, item.name));
+
+  const qtyCell = document.createElement('td');
+  qtyCell.appendChild(createInput('item-qty', 'number', '1', null, item.qty));
+
+  const priceCell = document.createElement('td');
+  priceCell.appendChild(createInput('item-price', 'number', '0', '0.01', item.price));
+
+  const totalCell = document.createElement('td');
+  totalCell.className = 'line-total';
+  totalCell.textContent = '$0.00';
+
+  const removeCell = document.createElement('td');
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'secondary remove-item';
+  removeBtn.type = 'button';
+  removeBtn.textContent = 'Remove';
+  removeCell.appendChild(removeBtn);
+
+  row.append(nameCell, qtyCell, priceCell, totalCell, removeCell);
 
   row.addEventListener('input', updateTotals);
-  row.querySelector('.remove-item').addEventListener('click', () => {
+  removeBtn.addEventListener('click', () => {
     row.remove();
     updateTotals();
   });
@@ -37,10 +62,12 @@ function collectItems() {
 
 function updateTotals() {
   let total = 0;
+
   [...tbody.querySelectorAll('tr')].forEach((row) => {
     const qty = Number(row.querySelector('.item-qty').value) || 0;
     const price = Number(row.querySelector('.item-price').value) || 0;
     const lineTotal = qty * price;
+
     row.querySelector('.line-total').textContent = formatCurrency(lineTotal);
     total += lineTotal;
   });
@@ -48,14 +75,16 @@ function updateTotals() {
   totalNode.textContent = formatCurrency(total);
 }
 
-async function saveDocument() {
+async function saveDocument(type = null) {
   const payload = {
     clientName: document.getElementById('clientName').value,
-    type: document.getElementById('docType').value,
+    type: type || document.getElementById('docType').value,
     items: collectItems()
   };
 
-  const res = await fetch('/api/create-quotation', {
+  const endpoint = type === 'invoice' ? '/api/create-invoice' : '/api/create-quotation';
+
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -68,7 +97,7 @@ async function saveDocument() {
   }
 
   localStorage.setItem('lastDocumentId', String(data.document.id));
-  statusNode.textContent = `Saved! Document ID: ${data.document.id}. Now go to PDF Preview page.`;
+  statusNode.textContent = `Saved! Document ID: ${data.document.id}. Open PDF Preview to generate and download.`;
 }
 
 async function convertToInvoice() {

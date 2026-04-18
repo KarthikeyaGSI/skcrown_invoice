@@ -1,12 +1,12 @@
 # SK Crown Invoice & Quotation System
 
-Lightweight web app for creating quotations/invoices, generating PDFs, and auto-archiving summary records.
+Lightweight web app for quotations/invoices with automatic temporary-data cleanup and Oracle-backed dashboard analytics.
 
 ## Tech Stack
 - Frontend: HTML, CSS, Vanilla JS
 - Backend: Node.js + Express
-- Database: Oracle Database with `node-oracledb`
-- PDF: `pdf-lib`
+- Database: Oracle (`node-oracledb`)
+- PDF generation: `pdf-lib`
 - Charts: Chart.js
 
 ## Folder Structure
@@ -23,6 +23,7 @@ skcrown_invoice/
 │  ├─ preview.html
 │  └─ downloads/
 ├─ src/
+│  ├─ config.js
 │  ├─ server.js
 │  ├─ db.js
 │  ├─ documentService.js
@@ -34,63 +35,70 @@ skcrown_invoice/
 └─ package.json
 ```
 
-## Core Features Implemented
+## Core Features
 
 1. **Quotation Generator**
-   - Enter client name + item rows (name, qty, price)
-   - Live total calculation
-   - Save quotation into `TEMP_DOCUMENTS`
+   - Enter client name and multiple items.
+   - Live total calculation.
+   - Save to `TEMP_DOCUMENTS`.
+
 2. **Invoice Generator**
-   - Save directly as invoice or convert quotation to invoice (`/api/convert-to-invoice/:id`)
-   - Generate invoice PDF
-3. **Auto Delete Logic**
-   - On `/api/generate-pdf`, summary is inserted into `CLIENT_HISTORY` and full record is removed from `TEMP_DOCUMENTS`
-   - Hourly cron cleanup archives + removes temp documents older than 24 hours
+   - Create invoice directly (`/api/create-invoice`) or convert saved quotation (`/api/convert-to-invoice/:id`).
+   - Generate PDF via `/api/generate-pdf`.
+
+3. **Auto-Delete Logic**
+   - On PDF generation: document summary moves to `CLIENT_HISTORY`; full temp data is deleted.
+   - Hourly cleanup job archives and deletes any temp records older than retention window (default 24h).
+
 4. **Dashboard**
    - Total revenue
    - Client count
-   - Last 7 days activity chart
-   - Recent clients list
+   - Last 7 days activity (with zero-filled missing days)
+   - Recent clients
+
+## Security & Reliability Improvements
+- Environment variable validation at startup.
+- Basic security headers via Helmet.
+- Server-side input validation limits for lengths/counts/ranges.
+- Oracle CLOBs fetched as strings to safely parse JSON items.
+- Safer frontend DOM rendering (no user-controlled `innerHTML`).
+- PDF file cleanup retention support.
 
 ## API Endpoints
 
 - `POST /api/create-quotation`
-  - Body: `{ clientName, items: [{name, qty, price}], type }`
-  - Saves in `TEMP_DOCUMENTS`
+  - Body: `{ clientName, items: [{name, qty, price}], type? }`
+- `POST /api/create-invoice`
+  - Body: `{ clientName, items: [{name, qty, price}] }`
+- `POST /api/convert-to-invoice/:id`
 - `POST /api/generate-pdf`
   - Body: `{ documentId }`
-  - Generates PDF + returns download path
-  - Moves summary to history + deletes temp full data
 - `GET /api/dashboard`
-  - Returns total revenue, client count, last 7 days activity, recent clients
-- `POST /api/convert-to-invoice/:id`
-  - Converts temp quotation type to invoice
 
-## Run Locally
+## Local Setup
 
 1. Install dependencies:
    ```bash
    npm install
    ```
-2. Create env file:
+2. Configure environment:
    ```bash
    cp .env.example .env
    ```
-3. Update DB credentials in `.env`.
-4. Create schema in Oracle:
+3. Fill `.env` with Oracle credentials.
+4. Run schema SQL:
    ```sql
    @sql/schema.sql
    ```
-5. Start app:
+5. Start server:
    ```bash
    npm start
    ```
-6. Open:
+6. Open browser:
    - `http://localhost:3000/dashboard.html`
    - `http://localhost:3000/quotation.html`
    - `http://localhost:3000/preview.html`
 
-## Notes
-- `node-oracledb` requires Oracle Client libraries. Follow official docs for your OS.
-- Validation/sanitization included for basic safety (empty fields and malformed item values).
-- Query design avoids joins and keeps reads simple for fast performance.
+## Oracle Notes
+- `node-oracledb` needs Oracle Instant Client libraries on your system.
+- Queries intentionally avoid joins for performance and simplicity.

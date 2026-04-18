@@ -1,5 +1,11 @@
 const currency = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
+function addCell(row, text) {
+  const cell = document.createElement('td');
+  cell.textContent = text;
+  row.appendChild(cell);
+}
+
 async function loadDashboard() {
   const res = await fetch('/api/dashboard');
   if (!res.ok) {
@@ -16,11 +22,9 @@ async function loadDashboard() {
 
   (data.recentClients || []).forEach((client) => {
     const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${client.clientName}</td>
-      <td>${currency.format(client.totalAmount)}</td>
-      <td>${new Date(client.createdAt).toLocaleString()}</td>
-    `;
+    addCell(row, client.clientName || '-');
+    addCell(row, currency.format(client.totalAmount || 0));
+    addCell(row, new Date(client.createdAt).toLocaleString());
     tbody.appendChild(row);
   });
 

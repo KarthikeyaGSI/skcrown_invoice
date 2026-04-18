@@ -1,31 +1,34 @@
 const express = require('express');
+const helmet = require('helmet');
 const path = require('path');
+const { getConfig } = require('./config');
 const { initPool, closePool } = require('./db');
-const { sanitizeText, validateItems } = require('./validators');
+const { validateClientName, validateItems } = require('./validators');
 const {
   createTempDocument,
   getTempDocumentById,
-  moveToHistoryAndDelete,
+  archiveAndDeleteById,
   convertQuotationToInvoice,
   getDashboardData,
   archiveAndDeleteExpiredDocuments
 } = require('./documentService');
-const { createDocumentPdf } = require('./pdfService');
+const { createDocumentPdf, cleanupOldPdfFiles } = require('./pdfService');
 
+const config = getConfig();
 const app = express();
-const port = Number(process.env.PORT || 3000);
 
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-app.post('/api/create-quotation', async (req, res) => {
+async function createDocumentHandler(req, res, forcedType) {
   try {
-    const clientName = sanitizeText(req.body.clientName);
-    const type = req.body.type === 'invoice' ? 'invoice' : 'quotation';
-
-    if (!clientName) {
-      return res.status(400).json({ message: 'Client name is required.' });
+    const clientValidation = validateClientName(req.body.clientName);
+    if (!clientValidation.ok) {
+      return res.status(400).json({ message: clientValidation.message });
     }
+
+    const type = forcedType || (req.body.type === 'invoice' ? 'invoice' : 'quotation');
 
     const itemsValidation = validateItems(req.body.items);
     if (!itemsValidation.ok) {
@@ -35,7 +38,7 @@ app.post('/api/create-quotation', async (req, res) => {
     const totalAmount = Number(itemsValidation.items.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2));
 
     const doc = await createTempDocument({
-      clientName,
+      clientName: clientValidation.clientName,
       items: itemsValidation.items,
       totalAmount,
       type
@@ -43,10 +46,13 @@ app.post('/api/create-quotation', async (req, res) => {
 
     return res.status(201).json({ message: 'Document created.', document: doc });
   } catch (error) {
-    console.error('create-quotation error:', error);
-    return res.status(500).json({ message: 'Failed to create quotation.' });
+    console.error('create document error:', error);
+    return res.status(500).json({ message: 'Failed to create document.' });
   }
-});
+}
+
+app.post('/api/create-quotation', (req, res) => createDocumentHandler(req, res, null));
+app.post('/api/create-invoice', (req, res) => createDocumentHandler(req, res, 'invoice'));
 
 app.post('/api/convert-to-invoice/:id', async (req, res) => {
   try {
@@ -80,7 +86,11 @@ app.post('/api/generate-pdf', async (req, res) => {
     }
 
     const downloadPath = await createDocumentPdf(doc);
-    await moveToHistoryAndDelete(doc);
+    const archived = await archiveAndDeleteById(id);
+
+    if (!archived) {
+      return res.status(409).json({ message: 'Document was already archived. Please refresh and retry.' });
+    }
 
     return res.json({ message: 'PDF generated successfully.', downloadPath });
   } catch (error) {
@@ -103,24 +113,29 @@ app.get('/', (_req, res) => {
   res.redirect('/dashboard.html');
 });
 
-const hourlyMs = 60 * 60 * 1000;
-setInterval(async () => {
+async function runCleanupCycle() {
   try {
-    const removed = await archiveAndDeleteExpiredDocuments();
-    if (removed > 0) {
-      console.log(`Cron cleanup: archived and removed ${removed} expired temp documents.`);
+    const archived = await archiveAndDeleteExpiredDocuments(config.retention.documentHours);
+    const deletedPdfs = await cleanupOldPdfFiles(config.retention.pdfHours);
+
+    if (archived > 0 || deletedPdfs > 0) {
+      console.log(`Cleanup: archived=${archived}, removed_pdfs=${deletedPdfs}`);
     }
   } catch (error) {
-    console.error('Cron cleanup error:', error);
+    console.error('Cleanup cycle error:', error);
   }
-}, hourlyMs);
+}
+
+const hourlyMs = 60 * 60 * 1000;
+setInterval(runCleanupCycle, hourlyMs);
 
 async function start() {
   try {
-    await initPool();
+    await initPool(config.db);
+    await runCleanupCycle();
 
-    app.listen(port, () => {
-      console.log(`SK Crown app running at http://localhost:${port}`);
+    app.listen(config.port, () => {
+      console.log(`SK Crown app running at http://localhost:${config.port}`);
     });
   } catch (error) {
     console.error('Server startup error:', error);
@@ -128,9 +143,12 @@ async function start() {
   }
 }
 
-process.on('SIGINT', async () => {
+async function shutdown() {
   await closePool();
   process.exit(0);
-});
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 start();

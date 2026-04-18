@@ -1,6 +1,11 @@
 const oracledb = require('oracledb');
 const { withConnection } = require('./db');
 
+function parseItems(itemsJson) {
+  if (!itemsJson) return [];
+  return JSON.parse(itemsJson);
+}
+
 async function createTempDocument({ clientName, items, totalAmount, type }) {
   return withConnection(async (connection) => {
     const result = await connection.execute(
@@ -44,7 +49,7 @@ async function getTempDocumentById(id) {
     return {
       id: row.ID,
       clientName: row.CLIENT_NAME,
-      items: JSON.parse(row.ITEMS_JSON),
+      items: parseItems(row.ITEMS_JSON),
       totalAmount: Number(row.TOTAL_AMOUNT),
       type: row.TYPE,
       createdAt: row.CREATED_AT
@@ -52,21 +57,36 @@ async function getTempDocumentById(id) {
   });
 }
 
-async function moveToHistoryAndDelete(doc) {
+async function archiveAndDeleteById(id) {
   return withConnection(async (connection) => {
+    const lockResult = await connection.execute(
+      `SELECT id, client_name, total_amount, created_at
+       FROM TEMP_DOCUMENTS
+       WHERE id = :id
+       FOR UPDATE`,
+      { id }
+    );
+
+    if (lockResult.rows.length === 0) {
+      return false;
+    }
+
+    const row = lockResult.rows[0];
+
     await connection.execute(
       `INSERT INTO CLIENT_HISTORY (client_name, total_amount, created_at)
        VALUES (:client_name, :total_amount, :created_at)`,
       {
-        client_name: doc.clientName,
-        total_amount: doc.totalAmount,
-        created_at: doc.createdAt
+        client_name: row.CLIENT_NAME,
+        total_amount: row.TOTAL_AMOUNT,
+        created_at: row.CREATED_AT
       }
     );
 
-    await connection.execute('DELETE FROM TEMP_DOCUMENTS WHERE id = :id', { id: doc.id });
-
+    await connection.execute('DELETE FROM TEMP_DOCUMENTS WHERE id = :id', { id: row.ID });
     await connection.commit();
+
+    return true;
   });
 }
 
@@ -82,6 +102,17 @@ async function convertQuotationToInvoice(id) {
 
     return result.rowsAffected || 0;
   });
+}
+
+function getLastSevenDaysKeys() {
+  const keys = [];
+  for (let i = 6; i >= 0; i -= 1) {
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+    day.setDate(day.getDate() - i);
+    keys.push(day.toISOString().slice(0, 10));
+  }
+  return keys;
 }
 
 async function getDashboardData() {
@@ -109,10 +140,16 @@ async function getDashboardData() {
        FETCH FIRST 10 ROWS ONLY`
     );
 
+    const byDay = new Map(activity.rows.map((row) => [row.DAY, Number(row.AMOUNT)]));
+    const mergedActivity = getLastSevenDaysKeys().map((day) => ({
+      day,
+      amount: byDay.get(day) || 0
+    }));
+
     return {
       totalRevenue: Number(revenue.rows[0].TOTAL_REVENUE),
       clientCount: Number(clientCount.rows[0].CLIENT_COUNT),
-      activity: activity.rows.map((row) => ({ day: row.DAY, amount: Number(row.AMOUNT) })),
+      activity: mergedActivity,
       recentClients: recent.rows.map((row) => ({
         clientName: row.CLIENT_NAME,
         totalAmount: Number(row.TOTAL_AMOUNT),
@@ -122,12 +159,14 @@ async function getDashboardData() {
   });
 }
 
-async function archiveAndDeleteExpiredDocuments() {
+async function archiveAndDeleteExpiredDocuments(retentionHours) {
   return withConnection(async (connection) => {
     const result = await connection.execute(
       `SELECT id, client_name, total_amount, created_at
        FROM TEMP_DOCUMENTS
-       WHERE created_at < SYSTIMESTAMP - INTERVAL '24' HOUR`
+       WHERE created_at < SYSTIMESTAMP - NUMTODSINTERVAL(:retentionHours, 'HOUR')
+       FOR UPDATE SKIP LOCKED`,
+      { retentionHours }
     );
 
     for (const row of result.rows) {
@@ -145,7 +184,6 @@ async function archiveAndDeleteExpiredDocuments() {
     }
 
     await connection.commit();
-
     return result.rows.length;
   });
 }
@@ -153,7 +191,7 @@ async function archiveAndDeleteExpiredDocuments() {
 module.exports = {
   createTempDocument,
   getTempDocumentById,
-  moveToHistoryAndDelete,
+  archiveAndDeleteById,
   convertQuotationToInvoice,
   getDashboardData,
   archiveAndDeleteExpiredDocuments
