@@ -18,11 +18,15 @@ skcrown_invoice/
 │  ├─ js/dashboard.js
 │  ├─ js/quotation.js
 │  ├─ js/preview.js
+│  ├─ index.html
 │  ├─ dashboard.html
 │  ├─ quotation.html
 │  ├─ preview.html
 │  └─ downloads/
+├─ api/
+│  └─ index.js
 ├─ src/
+│  ├─ app.js
 │  ├─ config.js
 │  ├─ server.js
 │  ├─ db.js
@@ -32,6 +36,7 @@ skcrown_invoice/
 ├─ sql/
 │  └─ schema.sql
 ├─ .env.example
+├─ vercel.json
 └─ package.json
 ```
 
@@ -74,6 +79,7 @@ skcrown_invoice/
 - `POST /api/generate-pdf`
   - Body: `{ documentId }`
 - `GET /api/dashboard`
+- `POST /api/run-cleanup` (optional manual/scheduled cleanup trigger; secure with `CLEANUP_TOKEN`)
 
 ## Local Setup
 
@@ -98,6 +104,21 @@ skcrown_invoice/
    - `http://localhost:3000/dashboard.html`
    - `http://localhost:3000/quotation.html`
    - `http://localhost:3000/preview.html`
+
+
+## Deploy (Vercel)
+
+This repo now includes `vercel.json` and `api/index.js` to avoid the **404 NOT_FOUND** issue on Vercel.
+
+1. In Vercel Project Settings, set environment variables:
+   - `DB_USER`
+   - `DB_PASSWORD`
+   - `DB_CONNECT_STRING`
+   - optional: `DB_POOL_MIN`, `DB_POOL_MAX`, `DOCUMENT_RETENTION_HOURS`, `PDF_RETENTION_HOURS`
+2. Deploy the repository.
+3. Open `/dashboard.html` or `/` (redirects to dashboard).
+
+> Note: In serverless mode, background cleanup intervals are not guaranteed to run continuously. Use Vercel Cron (or external scheduler) to call `POST /api/run-cleanup` with `x-cleanup-token` header when `CLEANUP_TOKEN` is configured.
 
 ## Oracle Notes
 - `node-oracledb` needs Oracle Instant Client libraries on your system.
