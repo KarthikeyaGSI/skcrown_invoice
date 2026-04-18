@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SK Crown Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/quotation.html">Create Quotation</a>
+    </nav>
+
+    <div class="grid">
+      <section class="card">
+        <div class="small">Total Revenue</div>
+        <div class="metric" id="revenue">$0.00</div>
+      </section>
+      <section class="card">
+        <div class="small">Client Count</div>
+        <div class="metric" id="clients">0</div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h3>Last 7 Days Activity</h3>
+      <canvas id="activityChart" height="100"></canvas>
+    </section>
+
+    <section class="card">
+      <h3>Recent Clients</h3>
+      <table class="table" id="recentClientsTable">
+        <thead>
+          <tr><th>Client</th><th>Amount</th><th>Date</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

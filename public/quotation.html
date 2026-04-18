@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Quotation</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="/quotation.html">Create Quotation</a>
+      <a href="/preview.html">PDF Preview</a>
+    </nav>
+
+    <section class="card">
+      <h2>Create Quotation / Invoice</h2>
+      <div class="grid">
+        <div>
+          <label for="clientName">Client Name</label>
+          <input id="clientName" placeholder="Enter client name" />
+        </div>
+        <div>
+          <label for="docType">Document Type</label>
+          <select id="docType">
+            <option value="quotation">Quotation</option>
+            <option value="invoice">Invoice</option>
+          </select>
+        </div>
+      </div>
+
+      <h3>Items</h3>
+      <table class="table" id="itemsTable">
+        <thead>
+          <tr><th>Name</th><th>Qty</th><th>Price</th><th>Line Total</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="actions">
+        <button class="secondary" id="addItemBtn" type="button">+ Add Item</button>
+      </div>
+
+      <p><strong>Total: </strong><span id="grandTotal">$0.00</span></p>
+
+      <div class="actions">
+        <button id="saveDocBtn" type="button">Save Document</button>
+        <button id="convertBtn" type="button" class="secondary">Convert Quotation → Invoice</button>
+      </div>
+      <p class="small" id="status"></p>
+    </section>
+  </div>
+
+  <script src="/js/quotation.js"></script>
+</body>
+</html>
