@@ -4,6 +4,8 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Bell, Search, Calendar } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
+import ThemeToggle from './ThemeToggle';
+
 
 export default function Topbar() {
   const pathname = usePathname();
@@ -42,8 +44,12 @@ export default function Topbar() {
           <span className="text-sm font-medium text-charcoal/70">{formatDate(new Date())}</span>
         </div>
 
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
-        <button className="relative p-2 rounded-xl hover:bg-black/5 text-charcoal/60 hover:text-gold transition-all">
+        <button className="relative p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 text-charcoal/60 dark:text-white/60 hover:text-gold transition-all">
+
           <Bell size={20} />
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </button>

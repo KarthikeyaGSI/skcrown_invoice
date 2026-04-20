@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-gold: #C9A646;
   --color-gold-hover: #D4B661;
   --color-charcoal: #1A1A1A;
-  --color-charcoal-muted: #404040;
+  --color-charcoal-muted: #2A2A2A;
+  --color-obsidian: #0A0A0A;
   --color-white-accent: #FDFDFD;
   
   --radius-xl: 16px;
@@ -13,15 +16,19 @@
   --shadow-premium: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03);
   --shadow-gold: 0 0 15px rgba(201, 166, 70, 0.2);
   
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
 :root {
   --background: #FDFDFD;
   --foreground: #1A1A1A;
-  --gold: #C9A646;
-  --charcoal: #1A1A1A;
 }
+
+.dark {
+  --background: #1A1A1A;
+  --foreground: #FDFDFD;
+}
+
 
 body {
   background: var(--background);

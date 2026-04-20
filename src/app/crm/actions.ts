@@ -1,0 +1,52 @@
+'use server';
+
+import prisma from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+
+export async function getLeads() {
+  try {
+    return await prisma.lead.findMany({
+      orderBy: { date: 'desc' }
+    });
+  } catch (error) {
+    console.error("Failed to fetch leads:", error);
+    return [];
+  }
+}
+
+export async function updateLeadStatus(id: string, status: string) {
+  try {
+    await prisma.lead.update({
+      where: { id },
+      data: { status }
+    });
+    revalidatePath('/crm');
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update lead status:", error);
+    return { success: false, error };
+  }
+}
+
+export async function createLead(data: {
+  clientName: string;
+  email?: string;
+  phone?: string;
+  amount?: number;
+  eventType?: string;
+  guests?: number;
+}) {
+  try {
+    const lead = await prisma.lead.create({
+      data: {
+        ...data,
+        status: 'Inquiry'
+      }
+    });
+    revalidatePath('/crm');
+    return { success: true, lead };
+  } catch (error) {
+    console.error("Failed to create lead:", error);
+    return { success: false, error };
+  }
+}

@@ -95,23 +95,34 @@ export default function InvoicePreview({ data, id = "preview-content" }: Props) 
       </div>
 
       {/* Footer / Totals */}
-      <div className="mt-12 flex justify-end">
+      <div className="mt-12 flex justify-between items-start">
+        <div className="flex-1 max-w-[200px]">
+          <p className="text-[10px] font-black text-black/20 uppercase tracking-widest mb-4">Authorized Signature</p>
+          <div className="h-16 border-b border-black/10 flex items-end justify-center pb-2 italic text-sm text-black/40">
+            Sign digitally online
+          </div>
+        </div>
         <div className="w-64 space-y-3">
           <div className="flex justify-between items-center text-sm">
             <span className="font-bold text-black/40">Subtotal</span>
-            <span className="font-bold text-charcoal">{formatCurrency(subtotal)}</span>
+            <span className="font-bold text-charcoal dark:text-white">{formatCurrency(subtotal)}</span>
           </div>
-          <div className="flex justify-between items-center text-sm">
-            <span className="font-bold text-black/40">Tax ({data.taxRate}%)</span>
-            <span className="font-bold text-charcoal">{formatCurrency(tax)}</span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-medium text-black/40">CGST (2.5%)</span>
+            <span className="font-medium text-charcoal dark:text-white">{formatCurrency(subtotal * 0.025)}</span>
+          </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-medium text-black/40">SGST (2.5%)</span>
+            <span className="font-medium text-charcoal dark:text-white">{formatCurrency(subtotal * 0.025)}</span>
           </div>
           <div className="h-[1px] bg-black/10 my-2" />
           <div className="flex justify-between items-center bg-gold/10 p-3 rounded-lg border border-gold/20">
-            <span className="text-sm font-black uppercase tracking-widest text-gold-hover">Total</span>
-            <span className="text-xl font-black text-charcoal">{formatCurrency(total)}</span>
+            <span className="text-sm font-black uppercase tracking-widest text-gold-hover">Grand Total</span>
+            <span className="text-xl font-black text-charcoal dark:text-white">{formatCurrency(subtotal * 1.05)}</span>
           </div>
         </div>
       </div>
+
 
       <div className="mt-20 pt-8 border-t border-black/5">
         <div className="flex justify-between items-center">

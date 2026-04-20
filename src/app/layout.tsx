@@ -11,26 +11,28 @@ export const metadata: Metadata = {
   description: "Luxury financial management and invoice builder for SK Crown Conventions, Warangal.",
 };
 
+import { Providers } from "./providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} min-h-full bg-background flex overflow-x-hidden`}>
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
-        <main className="flex-1 lg:ml-64 min-h-screen flex flex-col w-full">
-          <Topbar />
-          <div className="flex-1 p-4 md:p-8">
-            {children}
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body className={`${inter.className} h-full bg-background dark:bg-charcoal text-foreground flex overflow-x-hidden`}>
+        <Providers>
+          <div className="hidden lg:block">
+            <Sidebar />
           </div>
-        </main>
+          <main className="flex-1 lg:ml-64 min-h-screen flex flex-col w-full">
+            <Topbar />
+            <div className="flex-1 p-4 md:p-8">
+              {children}
+            </div>
+          </main>
+        </Providers>
       </body>
-
     </html>
   );
 }
-
