@@ -6,7 +6,6 @@ import {
   TrendingUp, 
   Wallet, 
   ArrowUpRight, 
-  ArrowDownRight,
   Zap
 } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
@@ -30,7 +29,16 @@ const chartData = [
   { name: 'Jun', revenue: 720000, expenses: 420000 },
 ];
 
-const mockActivities: any[] = [
+interface ClientActivity {
+  id: string;
+  customer: string;
+  date: Date;
+  amount: number;
+  status: string;
+  type: string;
+}
+
+const mockActivities: ClientActivity[] = [
   { id: 'INV-001', customer: 'Suresh Kumar Wedding', date: new Date(), amount: 250000, status: 'Published', type: 'Invoice' },
   { id: 'QUO-042', customer: 'Corporate Tech Meetup', date: new Date(), amount: 125000, status: 'Sent', type: 'Quotation' },
   { id: 'INV-002', customer: 'Dr. Reddy Reception', date: new Date(), amount: 350000, status: 'Draft', type: 'Invoice' },
@@ -48,7 +56,7 @@ export default function DashboardPage() {
       >
         <div>
           <h1 className="text-3xl font-black text-charcoal tracking-tight">Financial Overview</h1>
-          <p className="text-black/40 font-medium">Hello Admin, here's what's happening at SK Crown today.</p>
+          <p className="text-black/40 font-medium">Hello Admin, here&apos;s what&apos;s happening at SK Crown today.</p>
         </div>
         <div className="flex gap-4">
           <button className="px-6 py-2.5 rounded-xl border border-black/10 font-bold text-sm hover:bg-black/5 transition-all">

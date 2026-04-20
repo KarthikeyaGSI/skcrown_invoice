@@ -2,13 +2,15 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { Lead } from "@/types";
 
 export async function getLeads() {
   try {
     return await prisma.lead.findMany({
       orderBy: { date: 'desc' }
-    });
+    }) as unknown as Lead[];
   } catch (error) {
+
     console.error("Failed to fetch leads:", error);
     return [];
   }

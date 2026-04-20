@@ -1,66 +1,96 @@
 'use client';
 
-import React from 'react';
+import React, { useActionState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Chrome } from 'lucide-react';
-import { signIn } from 'next-auth/react';
+import { Crown, Lock, User } from 'lucide-react';
+import { loginAction } from '@/lib/auth-actions';
+
+const initialState = {
+  error: '',
+};
 
 export default function LoginPage() {
+  const [state, formAction, isPending] = useActionState(loginAction, initialState);
+
   return (
-    <div className="min-h-screen bg-charcoal flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent">
+    <div className="min-h-screen bg-charcoal flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-gold/10 via-transparent to-transparent font-sans">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="w-full max-w-md"
+        className="w-full max-w-sm"
       >
         {/* Logo Section */}
-        <div className="flex flex-col items-center gap-4 mb-12">
+        <div className="flex flex-col items-center gap-4 mb-10 text-center">
           <motion.div 
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 1, ease: "anticipate" }}
-            className="w-16 h-16 bg-gold rounded-2xl flex items-center justify-center shadow-gold"
+            whileHover={{ rotate: 180 }}
+            transition={{ duration: 0.8, ease: "anticipate" }}
+            className="w-14 h-14 bg-gold rounded-2xl flex items-center justify-center shadow-gold"
           >
-            <Crown className="text-charcoal" size={36} />
+            <Crown className="text-charcoal" size={28} />
           </motion.div>
-          <div className="text-center">
-            <h1 className="text-3xl font-black text-white tracking-widest leading-none">SK CROWN</h1>
-            <p className="text-[10px] text-gold uppercase tracking-[0.4em] font-bold mt-2">Executive Portal</p>
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-widest leading-none">SK CROWN</h1>
+            <p className="text-[9px] text-gold uppercase tracking-[0.4em] font-bold mt-2">Internal Administrator</p>
           </div>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-10 shadow-2xl relative overflow-hidden">
-          {/* Subtle Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gold rounded-full opacity-50 shadow-gold" />
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gold/50 rounded-full shadow-gold" />
           
-          <div className="text-center mb-10">
-            <h2 className="text-xl font-bold text-white mb-2">Welcome Back</h2>
-            <p className="text-sm text-white/40">Secure access to SK Crown management systems.</p>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-            className="w-full py-4 px-6 bg-white rounded-xl text-charcoal font-black text-sm flex items-center justify-center gap-4 hover:bg-gold transition-all duration-500 shadow-xl group"
-          >
-            <div className="w-5 h-5 bg-charcoal/5 rounded flex items-center justify-center group-hover:bg-charcoal/10 transition-colors">
-              <Chrome size={18} />
+          <form action={formAction} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">Email Address</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-gold transition-colors" size={18} />
+                <input 
+                  name="email"
+                  type="email" 
+                  required
+                  placeholder="admin@skcrown.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-sm text-white outline-none focus:border-gold/50 transition-all placeholder:text-white/10"
+                />
+              </div>
             </div>
-            <span>Continue with Google</span>
-          </motion.button>
 
-          <div className="mt-8 pt-8 border-t border-white/5 text-center">
-            <p className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-bold">
-              Protected by Enterprise Security
-            </p>
-          </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-gold transition-colors" size={18} />
+                <input 
+                  name="password"
+                  type="password" 
+                  required
+                  placeholder="••••••••"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-sm text-white outline-none focus:border-gold/50 transition-all placeholder:text-white/10"
+                />
+              </div>
+            </div>
+
+            {state?.error && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-xs font-bold text-center"
+              >
+                {state.error}
+              </motion.div>
+            )}
+
+            <motion.button
+              disabled={isPending}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full py-4 bg-gold rounded-xl text-charcoal font-black text-xs uppercase tracking-widest hover:bg-gold-hover transition-all duration-500 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+            >
+              {isPending ? 'Verifying...' : 'Access Portal'}
+            </motion.button>
+          </form>
         </div>
 
-        {/* Footer */}
-        <p className="mt-8 text-center text-xs text-white/20">
-          © 2024 SK Crown Conventions, Warangal.
+        <p className="mt-8 text-center text-[10px] text-white/20 uppercase tracking-[0.2em] font-bold">
+          © 2024 SK Crown Conventions
         </p>
       </motion.div>
     </div>

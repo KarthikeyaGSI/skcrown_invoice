@@ -19,3 +19,17 @@ export interface InvoiceData {
 }
 
 export type Status = 'Draft' | 'Published' | 'Sent';
+
+export interface Lead {
+  id: string;
+  clientName: string;
+  email?: string;
+  phone?: string;
+  amount?: number;
+  status: 'Inquiry' | 'Site Visit' | 'Negotiation' | 'Booked' | 'Completed';
+  date: string | Date;
+  notes?: string;
+  eventType?: string;
+  guests?: number;
+}
+

@@ -1,34 +1,34 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, Reorder, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   Search, 
-  Filter, 
   MoreHorizontal, 
-  Calendar, 
   Users,
   Briefcase
 } from 'lucide-react';
 import { getLeads, updateLeadStatus } from './actions';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
+import { Lead } from '@/types';
 
-const stages = ['Inquiry', 'Site Visit', 'Negotiation', 'Booked', 'Completed'];
+const stages = ['Inquiry', 'Site Visit', 'Negotiation', 'Booked', 'Completed'] as const;
 
 export default function CRMPage() {
-  const [leads, setLeads] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [leads, setLeads] = useState<Lead[]>([]);
 
   useEffect(() => {
+
+    const fetchLeads = async () => {
+      const data = await getLeads();
+      setLeads(data);
+    };
+
     fetchLeads();
   }, []);
 
-  async function fetchLeads() {
-    const data = await getLeads();
-    setLeads(data);
-    setIsLoading(false);
-  }
+
 
   async function handleDragEnd(id: string, newStatus: string) {
     // Optimistic update
@@ -96,15 +96,19 @@ export default function CRMPage() {
                   .map((lead) => (
                     <motion.div
                       key={lead.id}
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData("id", lead.id)}
                       layoutId={lead.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       whileHover={{ scale: 1.02 }}
-                      className="p-5 bg-white dark:bg-charcoal-muted rounded-xl border border-black/5 dark:border-white/5 shadow-premium cursor-grab active:cursor-grabbing group hover:border-gold/30 transition-all"
+                      className="group"
                     >
+                      <div
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData("id", lead.id)}
+                        className="p-5 bg-white dark:bg-charcoal-muted rounded-xl border border-black/5 dark:border-white/5 shadow-premium cursor-grab active:cursor-grabbing hover:border-gold/30 transition-all"
+                      >
+
                       <div className="flex justify-between items-start mb-4">
                         <h4 className="font-bold text-charcoal dark:text-white leading-tight group-hover:text-gold transition-colors">
                           {lead.clientName}
@@ -135,9 +139,11 @@ export default function CRMPage() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-              </AnimatePresence>
+                    </div>
+                  </motion.div>
+                ))}
+            </AnimatePresence>
+
               
               {leads.filter(l => l.status === stage).length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-black/10 dark:text-white/10 border-2 border-dashed border-transparent">

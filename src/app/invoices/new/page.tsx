@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { 
   Download, 
   Save, 
-  Eye, 
   ArrowLeft,
   Loader2
 } from 'lucide-react';
+
 import Link from 'next/link';
 import InvoiceForm from '@/components/invoices/InvoiceForm';
 import InvoicePreview from '@/components/invoices/InvoicePreview';

@@ -3,7 +3,6 @@
 import React from 'react';
 import { Plus, Trash2, Calendar, User, Mail, MapPin, Hash } from 'lucide-react';
 import { InvoiceData, InvoiceItem } from '@/types';
-import { cn } from '@/lib/utils';
 
 interface Props {
   data: InvoiceData;
@@ -11,9 +10,10 @@ interface Props {
 }
 
 export default function InvoiceForm({ data, onChange }: Props) {
-  const updateField = (field: keyof InvoiceData, value: any) => {
+  const updateField = (field: keyof InvoiceData, value: string | number | InvoiceItem[]) => {
     onChange({ ...data, [field]: value });
   };
+
 
   const addItem = () => {
     const newItem: InvoiceItem = {
@@ -30,7 +30,7 @@ export default function InvoiceForm({ data, onChange }: Props) {
     onChange({ ...data, items: data.items.filter(item => item.id !== id) });
   };
 
-  const updateItem = (id: string, field: keyof InvoiceItem, value: any) => {
+  const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
     const newItems = data.items.map(item => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
@@ -154,7 +154,7 @@ export default function InvoiceForm({ data, onChange }: Props) {
         </div>
         
         <div className="space-y-4">
-          {data.items.map((item, index) => (
+          {data.items.map((item) => (
             <div key={item.id} className="grid grid-cols-12 gap-4 items-end p-4 rounded-xl bg-black/5 border border-transparent hover:border-gold/20 transition-all group">
               <div className="col-span-6 space-y-1.5">
                 <label className="text-[10px] font-black uppercase tracking-widest text-black/40">Description</label>

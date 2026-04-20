@@ -12,8 +12,7 @@ interface Props {
 
 export default function InvoicePreview({ data, id = "preview-content" }: Props) {
   const subtotal = data.items.reduce((sum, item) => sum + item.amount, 0);
-  const tax = subtotal * (data.taxRate / 100);
-  const total = subtotal + tax;
+
 
   return (
     <div 
@@ -78,7 +77,7 @@ export default function InvoicePreview({ data, id = "preview-content" }: Props) 
             </tr>
           </thead>
           <tbody className="divide-y divide-black/5">
-            {data.items.length > 0 ? data.items.map((item, index) => (
+            {data.items.length > 0 ? data.items.map((item) => (
               <tr key={item.id}>
                 <td className="py-6 text-sm font-bold text-charcoal">{item.description}</td>
                 <td className="py-6 text-sm font-bold text-black/60 text-center">{item.quantity}</td>

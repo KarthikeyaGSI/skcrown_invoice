@@ -2,9 +2,11 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Bell, Search, Calendar } from 'lucide-react';
+import { Bell, Search, Calendar, LogOut } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import ThemeToggle from './ThemeToggle';
+import { logoutAction } from '@/lib/auth-actions';
+
 
 
 export default function Topbar() {
@@ -49,10 +51,24 @@ export default function Topbar() {
 
         {/* Notifications */}
         <button className="relative p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 text-charcoal/60 dark:text-white/60 hover:text-gold transition-all">
-
           <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-charcoal"></span>
         </button>
+
+        {/* User / Logout */}
+        <div className="flex items-center gap-3 pl-4 border-l border-black/5 dark:border-white/5">
+          <div className="text-right hidden sm:block">
+            <p className="text-xs font-black text-charcoal dark:text-white">Admin</p>
+            <p className="text-[10px] text-black/40 dark:text-white/40 uppercase font-bold tracking-tighter">SK Crown</p>
+          </div>
+          <button 
+            onClick={() => logoutAction()}
+            className="w-10 h-10 rounded-xl bg-charcoal dark:bg-white/10 text-white dark:text-gold flex items-center justify-center hover:bg-gold hover:text-charcoal dark:hover:bg-gold dark:hover:text-charcoal transition-all shadow-lg group"
+          >
+            <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
+
 
         {/* User Icon Mobile */}
         <div className="w-10 h-10 rounded-xl bg-charcoal flex items-center justify-center md:hidden">
