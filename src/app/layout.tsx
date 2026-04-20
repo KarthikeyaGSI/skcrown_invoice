@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   description: "Luxury financial management and invoice builder for SK Crown Conventions, Warangal.",
 };
 
+import { Toaster } from 'sonner';
 import { Providers } from "./providers";
 
 export default function RootLayout({
@@ -31,6 +32,12 @@ export default function RootLayout({
               {children}
             </div>
           </main>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              className: 'font-bold rounded-2xl border-none shadow-premium bg-white/90 dark:bg-charcoal/90 backdrop-blur-xl',
+            }}
+          />
         </Providers>
       </body>
     </html>

@@ -31,5 +31,6 @@ export interface Lead {
   notes?: string;
   eventType?: string;
   guests?: number;
+  signature?: string;
 }
 

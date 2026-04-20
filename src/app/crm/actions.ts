@@ -52,3 +52,16 @@ export async function createLead(data: {
     return { success: false, error };
   }
 }
+export async function saveLeadSignature(id: string, signature: string) {
+  try {
+    await prisma.lead.update({
+      where: { id },
+      data: { signature }
+    });
+    revalidatePath('/crm');
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to save lead signature:", error);
+    return { success: false, error };
+  }
+}

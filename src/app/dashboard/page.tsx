@@ -19,15 +19,8 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts';
-
-const chartData = [
-  { name: 'Jan', revenue: 450000, expenses: 320000 },
-  { name: 'Feb', revenue: 520000, expenses: 340000 },
-  { name: 'Mar', revenue: 480000, expenses: 310000 },
-  { name: 'Apr', revenue: 610000, expenses: 380000 },
-  { name: 'May', revenue: 590000, expenses: 390000 },
-  { name: 'Jun', revenue: 720000, expenses: 420000 },
-];
+import { getFinancialSummary, getChartData } from '@/lib/actions/financial-actions';
+import { getLeads } from '@/app/crm/actions';
 
 interface ClientActivity {
   id: string;
@@ -38,14 +31,43 @@ interface ClientActivity {
   type: 'Invoice' | 'Quotation';
 }
 
-const mockActivities: ClientActivity[] = [
-  { id: 'INV-001', customer: 'Suresh Kumar Wedding', date: new Date(), amount: 250000, status: 'Published', type: 'Invoice' },
-  { id: 'QUO-042', customer: 'Corporate Tech Meetup', date: new Date(), amount: 125000, status: 'Sent', type: 'Quotation' },
-  { id: 'INV-002', customer: 'Dr. Reddy Reception', date: new Date(), amount: 350000, status: 'Draft', type: 'Invoice' },
-  { id: 'QUO-043', customer: 'Birthday Gala - Riya', date: new Date(), amount: 75000, status: 'Sent', type: 'Quotation' },
-];
-
 export default function DashboardPage() {
+  const [summary, setSummary] = React.useState<any>(null);
+  const [chartData, setChartData] = React.useState<any[]>([]);
+  const [activities, setActivities] = React.useState<ClientActivity[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadData() {
+      const [summ, chart, leads] = await Promise.all([
+        getFinancialSummary(),
+        getChartData(),
+        getLeads()
+      ]);
+      setSummary(summ);
+      setChartData(chart);
+      
+      const leadActivities: ClientActivity[] = leads.slice(0, 4).map(l => ({
+        id: l.id,
+        customer: l.clientName,
+        date: new Date(l.date),
+        amount: l.amount || 0,
+        status: (l.status === 'Completed' ? 'Published' : l.status === 'Inquiry' ? 'Draft' : 'Sent') as any,
+        type: 'Invoice'
+      }));
+      setActivities(leadActivities);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (loading) return (
+    <div className="h-[80vh] flex flex-col items-center justify-center space-y-4">
+      <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+      <p className="text-gold font-black tracking-widest text-xs animate-pulse">SYNCHRONIZING PREMIUM DATA</p>
+    </div>
+  );
+
   return (
     <div className="space-y-8 pb-12">
       {/* Welcome Header */}
@@ -72,21 +94,21 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard 
           title="Total Revenue" 
-          value={3370000} 
-          trend={12.5} 
+          value={summary?.totalRevenue || 0} 
+          trend={summary?.revenueTrend} 
           icon={TrendingUp} 
           variant="gold"
         />
         <StatCard 
           title="Total Expenses" 
-          value={2160000} 
-          trend={-4.2} 
+          value={summary?.totalExpenses || 0} 
+          trend={summary?.expenseTrend} 
           icon={Wallet} 
         />
         <StatCard 
           title="Net Profit" 
-          value={1210000} 
-          trend={18.1} 
+          value={summary?.netProfit || 0} 
+          trend={summary?.profitTrend} 
           icon={Zap} 
         />
       </div>
@@ -102,7 +124,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-bold text-charcoal">Revenue vs Expenses</h3>
-              <p className="text-xs text-black/40 font-bold uppercase tracking-widest mt-1">H1 2024 Performance</p>
+              <p className="text-xs text-black/40 font-bold uppercase tracking-widest mt-1">Real-time Performance</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -221,7 +243,7 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <ActivityTable items={mockActivities} title="Recent Invoices & Quotes" />
+        <ActivityTable items={activities} title="Recent Invoices & Quotes" />
       </motion.div>
     </div>
   );

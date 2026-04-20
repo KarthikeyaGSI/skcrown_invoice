@@ -55,24 +55,14 @@ export default function Topbar() {
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-charcoal"></span>
         </button>
 
-        {/* User / Logout */}
         <div className="flex items-center gap-3 pl-4 border-l border-black/5 dark:border-white/5">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-black text-charcoal dark:text-white">Admin</p>
-            <p className="text-[10px] text-black/40 dark:text-white/40 uppercase font-bold tracking-tighter">SK Crown</p>
+          <div className="text-right">
+            <p className="text-xs font-black text-charcoal dark:text-white">Admin Portal</p>
+            <p className="text-[10px] text-black/40 dark:text-white/40 uppercase font-bold tracking-tighter">Authorized Use</p>
           </div>
-          <button 
-            onClick={() => logoutAction()}
-            className="w-10 h-10 rounded-xl bg-charcoal dark:bg-white/10 text-white dark:text-gold flex items-center justify-center hover:bg-gold hover:text-charcoal dark:hover:bg-gold dark:hover:text-charcoal transition-all shadow-lg group"
-          >
-            <LogOut size={18} className="group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-
-
-        {/* User Icon Mobile */}
-        <div className="w-10 h-10 rounded-xl bg-charcoal flex items-center justify-center md:hidden">
-          <span className="text-gold font-bold text-xs">SK</span>
+          <div className="w-10 h-10 rounded-xl bg-gold flex items-center justify-center shadow-premium transition-all group">
+            <span className="text-charcoal font-black text-xs">SK</span>
+          </div>
         </div>
       </div>
     </div>

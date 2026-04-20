@@ -10,20 +10,36 @@ import {
   Filter
 } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
-
-const pnlData = [
-  { month: 'January', revenue: 450000, expenses: 320000, profit: 130000 },
-  { month: 'February', revenue: 520000, expenses: 340000, profit: 180000 },
-  { month: 'March', revenue: 480000, expenses: 310000, profit: 170000 },
-  { month: 'April', revenue: 610000, expenses: 380000, profit: 230000 },
-  { month: 'May', revenue: 590000, expenses: 390000, profit: 200000 },
-  { month: 'June', revenue: 720000, expenses: 420000, profit: 300000 },
-];
+import { getPnLData, getFinancialSummary } from '@/lib/actions/financial-actions';
 
 export default function PnLPage() {
-  const totalRevenue = pnlData.reduce((sum, d) => sum + d.revenue, 0);
-  const totalExpenses = pnlData.reduce((sum, d) => sum + d.expenses, 0);
-  const totalProfit = totalRevenue - totalExpenses;
+  const [pnlData, setPnlData] = React.useState<any[]>([]);
+  const [summary, setSummary] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadData() {
+      const [data, summ] = await Promise.all([
+        getPnLData(),
+        getFinancialSummary()
+      ]);
+      setPnlData(data);
+      setSummary(summ);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (loading) return (
+    <div className="h-[80vh] flex flex-col items-center justify-center space-y-4">
+      <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+      <p className="text-gold font-black tracking-widest text-xs animate-pulse">GENERATING FINANCIAL STATEMENTS</p>
+    </div>
+  );
+
+  const totalRevenue = summary?.totalRevenue || 0;
+  const totalExpenses = summary?.totalExpenses || 0;
+  const totalProfit = summary?.netProfit || 0;
 
   return (
     <div className="space-y-8 pb-12">
@@ -58,7 +74,7 @@ export default function PnLPage() {
           <div className="flex justify-between items-end">
             <h2 className="text-4xl font-black text-charcoal mt-1">{formatCurrency(totalProfit)}</h2>
             <div className="bg-charcoal/10 px-3 py-1 rounded-full text-xs font-black text-charcoal flex items-center gap-1">
-              <ArrowUpRight size={14} /> +12.5%
+              <ArrowUpRight size={14} /> +{summary?.profitTrend}%
             </div>
           </div>
         </div>
@@ -81,8 +97,12 @@ export default function PnLPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5">
-              {pnlData.map((data, index) => {
-                const margin = ((data.profit / data.revenue) * 100).toFixed(1);
+              {pnlData.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-8 py-12 text-center text-black/20 font-bold italic">No financial data found for the current period.</td>
+                </tr>
+              ) : pnlData.map((data, index) => {
+                const margin = data.revenue > 0 ? ((data.profit / data.revenue) * 100).toFixed(1) : "0.0";
                 return (
                   <motion.tr 
                     initial={{ opacity: 0, x: -20 }}
@@ -119,7 +139,7 @@ export default function PnLPage() {
                         <div className="w-16 h-1.5 bg-black/5 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-gold" 
-                            style={{ width: `${margin}%` }} 
+                            style={{ width: `${Math.max(0, parseFloat(margin))}%` }} 
                           />
                         </div>
                       </div>
@@ -128,17 +148,19 @@ export default function PnLPage() {
                 );
               })}
             </tbody>
-            <tfoot>
-              <tr className="bg-charcoal text-white font-black">
-                <td className="px-8 py-6">AGGREGATE TOTAL</td>
-                <td className="px-8 py-6 text-right">{formatCurrency(totalRevenue)}</td>
-                <td className="px-8 py-6 text-right">{formatCurrency(totalExpenses)}</td>
-                <td className="px-8 py-6 text-right text-gold">{formatCurrency(totalProfit)}</td>
-                <td className="px-8 py-6 text-right">
-                  {((totalProfit / totalRevenue) * 100).toFixed(1)}%
-                </td>
-              </tr>
-            </tfoot>
+            {pnlData.length > 0 && (
+              <tfoot>
+                <tr className="bg-charcoal text-white font-black">
+                  <td className="px-8 py-6">AGGREGATE TOTAL</td>
+                  <td className="px-8 py-6 text-right">{formatCurrency(totalRevenue)}</td>
+                  <td className="px-8 py-6 text-right">{formatCurrency(totalExpenses)}</td>
+                  <td className="px-8 py-6 text-right text-gold">{formatCurrency(totalProfit)}</td>
+                  <td className="px-8 py-6 text-right">
+                    {totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : "0.0"}%
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>
@@ -156,7 +178,8 @@ export default function PnLPage() {
             </div>
           </div>
           <p className="text-sm text-black/60 leading-relaxed">
-            Your net profit margin has increased by <span className="font-bold text-charcoal">4.2%</span> compared to the previous quarter. June was your strongest month with a <span className="font-bold text-charcoal">41.7%</span> margin, driven by wedding season bookings.
+            Your net profit margin is currently <span className="font-bold text-charcoal">{totalRevenue > 0 ? ((totalProfit/totalRevenue)*100).toFixed(1) : 0}%</span>. 
+            Keep monitoring event-specific margins to optimize venue ROI during peak seasons.
           </p>
         </div>
         <div className="p-8 rounded-2xl bg-white border border-black/5 shadow-premium">
@@ -170,7 +193,7 @@ export default function PnLPage() {
             </div>
           </div>
           <p className="text-sm text-black/60 leading-relaxed">
-            Utility costs for May were <span className="font-bold text-charcoal">15%</span> higher than expected. We recommend reviewing electricity usage patterns during peak daytime events to optimize ROI.
+            Dynamic expense monitoring is active. Total operational costs for FY 24-25 currently stand at <span className="font-bold text-charcoal">{formatCurrency(totalExpenses)}</span>.
           </p>
         </div>
       </div>
