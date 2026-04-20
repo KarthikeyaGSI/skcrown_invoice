@@ -34,8 +34,8 @@ interface ClientActivity {
   customer: string;
   date: Date;
   amount: number;
-  status: string;
-  type: string;
+  status: 'Published' | 'Draft' | 'Sent';
+  type: 'Invoice' | 'Quotation';
 }
 
 const mockActivities: ClientActivity[] = [

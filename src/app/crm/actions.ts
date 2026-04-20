@@ -16,7 +16,7 @@ export async function getLeads() {
   }
 }
 
-export async function updateLeadStatus(id: string, status: string) {
+export async function updateLeadStatus(id: string, status: Lead['status']) {
   try {
     await prisma.lead.update({
       where: { id },

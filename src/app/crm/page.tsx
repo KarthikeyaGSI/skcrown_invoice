@@ -30,7 +30,7 @@ export default function CRMPage() {
 
 
 
-  async function handleDragEnd(id: string, newStatus: string) {
+  async function handleDragEnd(id: string, newStatus: Lead['status']) {
     // Optimistic update
     const previousLeads = [...leads];
     setLeads(leads.map(l => l.id === id ? { ...l, status: newStatus } : l));
@@ -86,7 +86,7 @@ export default function CRMPage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 const id = e.dataTransfer.getData("id");
-                handleDragEnd(id, stage);
+                handleDragEnd(id, stage as Lead['status']);
               }}
               className="space-y-4 min-h-[500px] p-2 bg-black/5 dark:bg-white/5 rounded-2xl border border-dashed border-black/10 dark:border-white/10"
             >
